@@ -19,7 +19,7 @@ def reynolds_tube_finder(v_tube):
 def v_nozzle_finder(mdot2):
     rho = 990.1
     d_n = 0.02
-    v_nozzle = mdot2/(rho*np.pi*0.25*d_n)
+    v_nozzle = mdot2/(rho*np.pi*0.25*d_n**2)
     return v_nozzle
 
 def presure_loss_tube_finder(v_tube, reynolds_tube):
@@ -155,6 +155,26 @@ def temperature_solver1(mdot1, mdot2, H, A, F):
     T2out = 59
     T1out = 21
     counter = 0
+    N = 250
+    for n in range(N):
+        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
+        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
+        T2outnew = T2in - (H*A*F/(mdot2*cp))*LMTD
+        if abs(T2outnew-T2out) < 0.1:
+            return [T1out, T2out, LMTD]
+        T2out = T2outnew
+        #print(T2out)
+        counter += 1
+        if counter == N-1:
+            print("No solution found")
+
+def temperature_solver1GPT(mdot1, mdot2, H, A, F):
+    T1in = 20
+    T2in = 60
+    cp = 4179
+    T2out = 59
+    T1out = 21
+    counter = 0
     N = 101
     for n in range(N):
         T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
@@ -167,6 +187,7 @@ def temperature_solver1(mdot1, mdot2, H, A, F):
         counter += 1
         if counter == N-1:
             print("No solution found")
+            return [None, None, None]  # Return default values indicating no solution found
 
 def temperature_solver2(mdot1, mdot2, H, A, F):
     T1in = 20
