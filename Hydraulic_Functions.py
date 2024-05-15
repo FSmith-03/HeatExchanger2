@@ -73,7 +73,11 @@ def shell_area_finder(Y, N_b):
     d_o = 0.008
     B = L/(N_b+1)
     shell_area = (d_sh/Y)*(Y-d_o)*B
-    return shell_area
+    if shell_area > 0:
+        return shell_area
+    else:
+        return "shell_error"
+    
 
 def v_shell_finder(mdot1, shell_area):
     rho = 990.1
@@ -148,6 +152,59 @@ def H_finder(reynolds_tube, reynolds_shell):
     H = 1/Hinv
     return H
 
+def temperature_solvernew(mdot1, mdot2, H, A, F, N_i, error):
+    T1in = 20
+    T2in = 60
+    cp = 4179
+    T2out = 59
+    T1out = 21
+    step = (T2in-T1in)/N_i
+    answer_list = []
+    while T2out > T1in:
+        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
+        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
+        qdot1 = cp*mdot1*(T1out-T1in)
+        qdot2 = cp*mdot2*(T2in-T2out)
+        qdot3 = H*A*F*LMTD
+        answer_new = [qdot1, qdot2, qdot3, T1out, T2out, LMTD]
+        delta_qdot1_3_new = abs(answer_new[0] - answer_new[2])
+        delta_qdot2_3_new = abs(answer_new[1] - answer_new[2])
+        if delta_qdot1_3_new < error and delta_qdot2_3_new < error:
+            return T1out, T2out, LMTD
+            break
+        T2out -= step
+
+def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
+    T1in = 20
+    T2in = 60
+    cp = 4179
+    T2out = 57
+    T1out = 21
+    step = (T2in-T1in)/N_i
+    timeout = 1000000
+    counter = 0
+    while T2out > T1in:
+        check = True
+        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
+        if ((T2in-T1out)/(T2out-T1in)) == 1:
+            check = False
+            T2out = T2out - step
+        if check:
+            LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
+            qdot1 = cp*mdot1*(T1out-T1in)
+            qdot2 = cp*mdot2*(T2in-T2out)
+            qdot3 = H*A*F*LMTD
+            answer_new = [qdot1, qdot2, qdot3, T1out, T2out, LMTD]
+            delta_qdot1_3_new = abs(answer_new[0] - answer_new[2])
+            delta_qdot2_3_new = abs(answer_new[1] - answer_new[2])
+            if delta_qdot1_3_new < error and delta_qdot2_3_new < error:
+                return T1out, T2out, LMTD
+            T2out = T2out - step
+        counter += 1
+        if counter == timeout:
+            return -1000, -1000, -1000
+    return -1000, -1000, -1000
+
 def temperature_solver1(mdot1, mdot2, H, A, F):
     T1in = 20
     T2in = 60
@@ -196,8 +253,8 @@ def temperature_solver2(mdot1, mdot2, H, A, F):
     T2out = 59      #Starting values for iteration
     T1out = 21
     counter = 0
-    N = 201
-    step = 0.1
+    N = 10000
+    step = 0.01
     for n in range(N):
         T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
         LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))

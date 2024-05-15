@@ -92,3 +92,14 @@ if abs(p_n1 - 2556.9) > 5:
     print("Nozzle pressure loss error 1")
 else:
     pass
+
+#Check that tempertature function qdots are roughly equal
+
+H = H_finder(Re_t, Re_sh)
+
+T1out, T2out, LMTD = temperature_solver1(mdot1, mdot2, H, A, F)
+qdot1 = cp*mdot1*(T1out-20)
+qdot2 = cp*mdot2*(60-T2out)
+print("Qdot1 is", qdot1)
+print("Qdot2 is", qdot2)
+print(T1out, T2out, LMTD)
