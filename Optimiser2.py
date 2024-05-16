@@ -35,35 +35,38 @@ def objective_function(params):
     pressure_loss_nozzle_1 = pressure_loss_nozzle_finder(v_nozzle_1)
 
     pressure_loss_1 = (pressure_loss_shell + pressure_loss_nozzle_1) / 1e5
-    pressure_rise_1, state1 = pressure_checker(pressure_loss_1, mdot2, 2)
-
+    pressure_rise_1, state1 = pressure_checker(pressure_loss_1, mdot1, 1)
+    
     # Thermal Analysis
     H = H_finder(reynolds_tube, reynolds_shell)
-    T1out, T2out, LMTD = temperature_solver1(mdot1, mdot2, H, A, F)
+    T1out, T2out, LMTD = temperature_solver2(mdot1, mdot2, H, A, F)
     # Check if both pressure rises are greater than the pressure drops
     if state1 and state2:
         # Negative LMTD to convert maximization problem to minimization
+        #print(pressure_loss_1, pressure_rise_1)
+        #print(params)
         return -LMTD
     else:
         # Return a large value to discourage selecting this solution
+        print(params)
         return 1e6
 
 # Define the bounds for each parameter
-bounds = [(8,20), (5,15), (0.005, 0.020), (0.3, 0.6), (0.3, 0.6)]
+bounds = [(1,10), (5,19), (0.005, 0.020), (0.1, 1), (0.1, 1)]
 
 # Perform global optimization using differential evolution
-#result = differential_evolution(objective_function, bounds)
+result = differential_evolution(objective_function, bounds)
 
 # Extract optimal parameters
-#optimal_params = result.x
-#optimal_LMTD = -result.fun  # Convert back to positive LMTD
+optimal_params = result.x
+optimal_LMTD = -result.fun  # Convert back to positive LMTD
 
-result_brute = brute(objective_function, ranges=bounds, Ns=10, finish=None)
-min_value = objective_function(result_brute)
+#result_brute = brute(objective_function, ranges=bounds, Ns=10, finish=None)
+#min_value = objective_function(result_brute)
 
 # Extract optimal parameters
-optimal_params = result_brute
-optimal_LMTD = min_value
+#optimal_params = result_brute
+#optimal_LMTD = min_value
 
 # Print results
 print("Optimal Parameters:", optimal_params)
