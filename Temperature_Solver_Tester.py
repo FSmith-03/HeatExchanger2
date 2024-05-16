@@ -54,5 +54,3 @@ T1out, T2out, LMTD2 = temperature_solver2(mdot1, mdot2, H, A, F)
 print("2", LMTD2)
 T1out, T2out, LMTD3 = temperature_solver3GPT(mdot1, mdot2, H, A, F)
 print("3", LMTD3)
-
-#Hi

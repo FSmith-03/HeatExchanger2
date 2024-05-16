@@ -6,7 +6,7 @@ T2in = 60
 cp = 4179
 d_i = 0.006
 L = 0.35
-N = 13
+N = 10
 
 def c_min(m1, m2):
  return(min(m1*cp,m2*cp))
