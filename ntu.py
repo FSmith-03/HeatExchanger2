@@ -1,12 +1,13 @@
 import numpy as np
 import Hydraulic_Functions as hf
+import itertools
 
 T1in = 20
 T2in = 60
 cp = 4179
 d_i = 0.006
 L = 0.35
-N = 10
+#N = 10
 
 def c_min(m1, m2):
  return(min(m1*cp,m2*cp))
@@ -24,8 +25,8 @@ def NTU(U, A, m1, m2):
  NTU_out = U*A/c_min(m1,m2)
  return (NTU_out)
 
-U_pipe = 9878.7
-A_pipe = N * d_i* L * np.pi
+#U_pipe = 9878.7
+#A_pipe = N * d_i* L * np.pi
 
 
 def effect_NTU_counterflow(m1, m2, U, A): #for constant cp
@@ -43,10 +44,26 @@ def effect_NTU_parallelflow(m1, m2, U, A): #for constant cp
     #effectiveness = 0.5*(1-np.exp(-NTU_value)) #pure parallel rc=1
     return (effectiveness)
 
+def effect_NTU_1_shell_2_pass (m1, m2, U, A): #effectivness of each shell pass
+  NTU_value = NTU(U, A, m1, m2)
+  RC_value = RC(m1, m2)
+  Gamma = NTU_value * np.sqrt(1+RC_value**2)
+  effectiveness = 2/((1+RC_value)+ np.sqrt(1+RC_value**2) * 1/(np.tan(Gamma/2)))
+  return (effectiveness) 
+
+def effect_NTU_shellandpass(m1, m2, U, A, passes): # effectivness N shell passes, 2N tube passes
+  NTU_value = NTU(U, A, m1, m2)
+  RC_value = RC(m1, m2)
+  effect_1sp = effect_NTU_1_shell_2_pass (m1, m2, U, A)
+  effectiveness_multi = (((1-effect_1sp*RC_value)/(1-effect_1sp))**passes -1)*(((1-effect_1sp*RC_value)/(1-effect_1sp))**passes -RC_value)**(-1)
+  return (effectiveness_multi) 
+
+"""
 mdot1 = 0.5
 mdot2 = 0.47
 Y = 0.014 # Pitch for square arrangement
 N_b = 9
+N_passes = 2
 
 
 shell_area_value = hf.shell_area_finder(Y, N_b)
@@ -56,17 +73,78 @@ reynolds_shell_value = hf.reynolds_shell_finder(v_shell_value, shell_chic_length
 v_tube_value = hf.v_tube_finder(mdot2, N)
 reynolds_tube_value = hf.reynolds_tube_finder(v_tube_value)
 
-Qdotmax = mdot2*cp*(T2in-T1in)
+
 U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
 A_pipe = N * d_i* L * np.pi
-Qdotactual_counter = effect_NTU_counterflow(mdot1, mdot2, U_pipe, A_pipe) * Qdotmax
-print(effect_NTU_counterflow(mdot1, mdot2, U_pipe, A_pipe))
+Qdotmax = mdot2*cp*(T2in-T1in)
+#print(U_pipe, A_pipe)
+Qdotactual_counter = effect_NTU_1_shell_2_pass(mdot1, mdot2, U_pipe, A_pipe) * Qdotmax
+
 
 T2out_NTU_counter = T2in - Qdotactual_counter/(mdot2*cp)
 T1out_NTU_counter = Qdotactual_counter/(mdot1*cp) + T1in
 
 print(T2out_NTU_counter)
 print(T1out_NTU_counter)
+
+print(effect_NTU_counterflow(mdot1, mdot2, U_pipe, A_pipe))
+print(effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, N_passes))
+"""
+
+
+
+def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
+    max_value = float('-inf')
+    max_combination = None
+    
+    # Generate all possible combinations of variable values
+    combinations = itertools.product(*[range(int(min_val), int(max_val)+1, int(step)) for (min_val, max_val), step in zip(variable_ranges, step_sizes)])
+    
+    # Iterate over all combinations
+    for combination in combinations:
+        # Evaluate the objective function with the current combination of variable values
+        value = objective_function(*combination)
+        
+        # Update maximum value and combination if necessary
+        if value > max_value:
+            max_value = value
+            max_combination = combination
+            
+    return max_value, max_combination
+
+# Example usage:
+def objective_function(N, Y, N_b, mdot1, mdot2, passes):
+    shell_area_value = hf.shell_area_finder(Y, N_b)
+    v_shell_value = hf.v_shell_finder(mdot1, shell_area_value)
+    shell_chic_length_value = hf.shell_chic_length_finder(shell_area_value)
+    reynolds_shell_value = hf.reynolds_shell_finder(v_shell_value, shell_chic_length_value)
+    v_tube_value = hf.v_tube_finder(mdot2, N)
+    reynolds_tube_value = hf.reynolds_tube_finder(v_tube_value)
+
+    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
+    A_pipe = N * d_i* L * np.pi
+
+    return effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
+
+variable_ranges = [(0, 10), (0, 0.5), (0, 15), (0, 3), (0, 3), (0, 5)]  # Example variable ranges
+step_sizes = [1, 0.01, 1, 0.01, 0.01, 1]  # Example step sizes for each variable
+
+max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
+print("Maximum value:", max_value)
+print("Maximizing combination of variables:", max_combination)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
