@@ -22,10 +22,10 @@ def v_nozzle_finder(mdot2):
     v_nozzle = mdot2/(rho*np.pi*0.25*d_n**2)
     return v_nozzle
 
-def presure_loss_tube_finder(v_tube, reynolds_tube):
+def presure_loss_tube_finder(v_tube, reynolds_tube, L):
     rho = 990.1
     d_i = 0.006
-    L = 0.35
+    #L = 0.35
     f = (1.82*np.log10(reynolds_tube)-1.64)**-2
     pressure_loss_tube = 0.5*rho*(v_tube)**2*f*(L/d_i)
     return pressure_loss_tube
@@ -77,7 +77,15 @@ def shell_area_finder(Y, N_b):
         return shell_area
     else:
         return "shell_error"
-    
+
+def shell_area_finder_NTU(Y, N_b, L):
+    #L = 0.35
+    d_sh = 0.064
+    d_o = 0.008
+    B = L/(N_b+1)
+    shell_area = (d_sh/Y)*(Y-d_o)*B
+    return shell_area
+     
 
 def v_shell_finder(mdot1, shell_area):
     rho = 990.1
