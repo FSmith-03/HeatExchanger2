@@ -170,8 +170,8 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
     return max_value, max_combination
 
 def objective_function(L, N, Y, N_b, passes):
-    mdot1, error1 = pressure_intersection_1(N, N_b, Y)
-    mdot2, error2 = pressure_intersection_2(N)
+    mdot1, error1 = pressure_intersection_1(N, N_b, Y, L)
+    mdot2, error2 = pressure_intersection_2(N, L)
     shell_area_value = shell_area_finder_NTU(Y, N_b, L)
     v_shell_value = hf.v_shell_finder(mdot1, shell_area_value)
     shell_chic_length_value = hf.shell_chic_length_finder(shell_area_value)
@@ -200,8 +200,8 @@ def objective_function(L, N, Y, N_b, passes):
        return 0
     
 
-variable_ranges = [(0.34, 0.35), (5, 6), (0.012, 0.013), (6, 7), (1, 3)]  # Example variable ranges
-step_sizes = [0.01, 1, 0.001, 1, 1]
+variable_ranges = [(0.25, 0.35), (5, 6), (0.012, 0.013), (1, 7), (1, 3)]  # Example variable ranges
+step_sizes = [0.001, 1, 0.001, 1, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)

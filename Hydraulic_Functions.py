@@ -143,7 +143,7 @@ def pressure_checker(pressure_loss, mdot, stream):
         return reference_pressure_rise, True
 
 #print(pressure_checker(0.04360, 0.45, 2))
-def pressure_intersection_2(N, mdot_upper=0.6):
+def pressure_intersection_2(N, L, mdot_upper=0.6):
     A = N*np.pi*0.006*0.35
     mdot2 = np.arange(0.2, mdot_upper, 0.0005)
     best_estimate = 100
@@ -178,14 +178,14 @@ def pressure_intersection_2(N, mdot_upper=0.6):
             return "No root found within range, increase upper limit"
 
 
-def pressure_intersection_1(N, Nb, Y, mdot_upper=0.8):
+def pressure_intersection_1(N, Nb, Y, L, mdot_upper=0.8):
     A = N*np.pi*0.006*0.35
     mdot1 = np.arange(0.2, mdot_upper, 0.0005)
     best_estimate = 100
     #Hot stream
     for mdot in mdot1:
     #Cold stream
-        A_sh = shell_area_finder(Y, Nb)
+        A_sh = shell_area_finder(Y, Nb, L)
         v_shell = v_shell_finder(mdot, A_sh)
         v_nozzle_1 = v_nozzle_finder(mdot)
         d_sh = shell_chic_length_finder(A_sh)
