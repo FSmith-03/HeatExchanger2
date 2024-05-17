@@ -115,7 +115,7 @@ def brute_force(bounds, step_i, graphing = False):
     print("Optimal design parameters are:", params)
     print("Optimal temperatures are:", output)
     if graphing == True:
-        plt.plot(x, y, color = 'cyan', label = 'LMTD Trend')
+        plt.scatter(x, y, s=10, color = 'cyan', label = 'LMTD Trend')
         plt.plot(x_opt, y_opt, color = 'red', label = 'LMTD Optimal')
         plt.xlabel('Iteration Number')
         plt.ylabel('LMTD')
@@ -124,7 +124,7 @@ def brute_force(bounds, step_i, graphing = False):
         plt.show()
 
 bounds = [(1,10), (5,19), (0.005, 0.020), (0.1, 1), (0.1, 1)] 
-print(brute_force(bounds, 4, graphing=True))
+print(brute_force(bounds, 6, graphing=True))
 #print(shell_area_finder(0.005, 5))
 
 

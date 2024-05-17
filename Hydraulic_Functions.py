@@ -108,10 +108,10 @@ def pressure_loss_nozzle_finder(v_nozzle):
 
 #Note input to pressure checker needs to be in bars
 def pressure_checker(pressure_loss, mdot, stream):
-    x_cold_data = np.array([0.7083, 0.6417, 0.5750, 0.5083, 0.4250, 0.3583, 0.3083, 0.2417, 0.1917, 0.1583])
-    y_cold_data = np.array([0.1310, 0.2017, 0.2750, 0.3417, 0.4038, 0.4503, 0.4856, 0.5352, 0.5717, 0.5876])
-    x_hot_data = np.array([0.4722, 0.4340, 0.3924, 0.3507, 0.3021, 0.2535, 0.1979, 0.1493, 0.1111, 0.0694])
-    y_hot_data = np.array([0.0538, 0.1192, 0.1727, 0.2270, 0.2814, 0.3366, 0.3907, 0.4456, 0.4791, 0.5115])
+    x_cold_data = np.array([0.6333, 0.6083, 0.5750, 0.5083, 0.4250, 0.3583, 0.3083, 0.2417, 0.1917, 0.1583])
+    y_cold_data = np.array([0.1024, 0.1444, 0.1870, 0.2717, 0.3568, 0.4203, 0.4626, 0.5152, 0.5597, 0.5776])
+    x_hot_data = np.array([0.4826, 0.4340, 0.3924, 0.3507, 0.3021, 0.2535, 0.1979, 0.1493, 0.1111, 0.0694])
+    y_hot_data = np.array([0.0944, 0.1662, 0.2297, 0.2820, 0.3294, 0.3856, 0.4447, 0.5006, 0.5311, 0.5615])
     degree = 5
     if stream == 1:
         # Create a Vandermonde matrix of the independent variable x
@@ -152,28 +152,6 @@ def H_finder(reynolds_tube, reynolds_shell):
     H = 1/Hinv
     return H
 
-def temperature_solvernew(mdot1, mdot2, H, A, F, N_i, error):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59
-    T1out = 21
-    step = (T2in-T1in)/N_i
-    answer_list = []
-    while T2out > T1in:
-        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
-        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-        qdot1 = cp*mdot1*(T1out-T1in)
-        qdot2 = cp*mdot2*(T2in-T2out)
-        qdot3 = H*A*F*LMTD
-        answer_new = [qdot1, qdot2, qdot3, T1out, T2out, LMTD]
-        delta_qdot1_3_new = abs(answer_new[0] - answer_new[2])
-        delta_qdot2_3_new = abs(answer_new[1] - answer_new[2])
-        if delta_qdot1_3_new < error and delta_qdot2_3_new < error:
-            return T1out, T2out, LMTD
-            break
-        T2out -= step
-
 def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
     T1in = 20
     T2in = 60
@@ -204,117 +182,6 @@ def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
         if counter == timeout:
             return -1000, -1000, -1000
     return -1000, -1000, -1000
-
-def temperature_solver1(mdot1, mdot2, H, A, F):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59
-    T1out = 21
-    counter = 0
-    N = 250
-    for n in range(N):
-        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
-        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-        T2outnew = T2in - (H*A*F/(mdot2*cp))*LMTD
-        if abs(T2outnew-T2out) < 0.1:
-            return [T1out, T2out, LMTD]
-        T2out = T2outnew
-        #print(T2out)
-        counter += 1
-        if counter == N-1:
-            print("No solution found")
-
-def temperature_solver1GPT(mdot1, mdot2, H, A, F):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59
-    T1out = 21
-    counter = 0
-    N = 101
-    for n in range(N):
-        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
-        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-        T2outnew = T2in - (H*A*F/(mdot2*cp))*LMTD
-        if abs(T2outnew-T2out) < 0.01:
-            return [T1out, T2out, LMTD]
-        T2out = T2outnew
-        #print(T2out)
-        counter += 1
-        if counter == N-1:
-            print("No solution found")
-            return [None, None, None]  # Return default values indicating no solution found
-
-def temperature_solver2(mdot1, mdot2, H, A, F):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59      #Starting values for iteration
-    T1out = 21
-    counter = 0
-    N = 10000
-    step = 0.01
-    for n in range(N):
-        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
-        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-        T2outnew = T2in - (H*A*F/(mdot2*cp))*LMTD
-        #Iteration by reducing the T2out estimate sequentially by a step until the estimate reaches a minimum
-        if T2outnew > T2out:
-            return [T1out, T2out, LMTD]
-        T2out = T2out - step
-        #print(T2out)
-        counter += 1
-        if counter == N-1:
-            print("No solution found increase number of iterations")
-
-def temperature_solver3(mdot1, mdot2, H, A, F):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59      #Starting values for iteration
-    T1out = 21
-    counter = 0
-    step = 0.1
-    N = (T2in-T1in)/step
-    LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-    qdot1 = cp*mdot1*(T1out-T1in)
-    qdot2 = cp*mdot2*(T2in-T2out)
-    qdotl = H*A*LMTD*F
-    while abs(qdotl-qdot1) > 0.1:
-        T1out += step
-        qdot1 = cp*mdot1*(T1out-T1in)
-        T2out = T2in-(mdot1/mdot2)*(T1out-T1in)
-        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
-        qdotl =  H*A*LMTD*F
-    return T1out, T2out, LMTD
-
-
-def temperature_solver3GPT(mdot1, mdot2, H, A, F):
-    T1in = 20
-    T2in = 60
-    cp = 4179
-    T2out = 59      # Starting values for iteration
-    T1out = 21
-    counter = 0
-    step = 0.1
-    max_iterations = 1000  # Setting a maximum number of iterations
-    N = (T2in-T1in)/step
-    while counter < max_iterations:
-        counter += 1
-        T1out_new = T1out + step
-        qdot1 = cp * mdot1 * (T1out - T1in)
-        T2out = T2in - (mdot1 / mdot2) * (T1out - T1in)
-        LMTD = ((T2in - T1out) - (T2out - T1in)) / np.log((T2in - T1out) / (T2out - T1in))
-        qdotl = H * A * LMTD * F
-        if abs(qdotl - qdot1) <= 0.1:
-            break  # Exiting the loop if convergence is achieved
-        T1out = T1out_new  # Update T1out for the next iteration
-
-    if counter == max_iterations:
-        print("Max iterations reached without convergence.")
-
-    return T1out, T2out, LMTD
 
 def efficiency_finder(LMTD, H, A, F, mdot2):
     cp = 4179
