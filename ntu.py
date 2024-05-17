@@ -110,9 +110,9 @@ o36_ring_mass = 5.3/1000 #kg/ring
 
 def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_rings, o36_rings):
       copper_tube_mass_total = copper_tube_mass * N * L * passes
-      acrylic_pipe_mass_total = acrylic_pipe_mass #tube vs shell to check
+      acrylic_pipe_mass_total = acrylic_pipe_mass * L
       nozzle_mass_total = nozzle_mass * nozzles
-      abs_sheet_mass_total = abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness #check for splitters
+      abs_sheet_mass_total = (abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness) + (passes-1)*L*(d_sh)*abs_sheet_thickness #check for splitters
       photopolymer_resin_mass_total = photopolymer_resin_mass * end_plate_vol
       silicone_ring_mass_total = silicone_ring_mass * sil_rings
       o36_ring_mass_total = o36_ring_mass * o36_rings
@@ -156,7 +156,7 @@ def pressure_checker_NTU(pressure_loss, mdot, stream):
     
     #Check to ensure the pressure rise in the compressor is greater than the pressure drop in the HX
 
-    if abs(pressure_loss - reference_pressure_rise) < 0.01:
+    if abs(pressure_loss - reference_pressure_rise) < 0.1:
         print("pressure under")
         return True
     else:
@@ -243,8 +243,8 @@ def objective_function(L, N, Y, N_b, mdot1, mdot2, passes):
        return 0
     
 
-variable_ranges = [(0.35, 0.36), (6, 7), (0.014, 0.015), (6, 7), (0.6, 0.7), (0.4, 0.5), (1, 2)]  # Example variable ranges
-step_sizes = [0.1, 1, 0.001, 1, 0.01, 0.01, 1]
+variable_ranges = [(0.25, 0.36), (3, 15), (0.012, 0.015), (5, 10), (0.4, 0.8), (0.4, 0.8), (1, 5)]  # Example variable ranges
+step_sizes = [0.1, 1, 0.001, 1, 0.1, 0.1, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
