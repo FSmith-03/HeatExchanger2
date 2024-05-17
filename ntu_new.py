@@ -120,9 +120,10 @@ def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_r
       if mass_tot <1.2:
          return(True)
       else:
-         print("mass over")
+         #print("mass over")
          #print(mass_tot)
-         print(copper_tube_mass_total, acrylic_pipe_mass_total, nozzle_mass_total,abs_sheet_mass_total,photopolymer_resin_mass_total,silicone_ring_mass_total,o36_ring_mass_total)
+         #print(copper_tube_mass_total, acrylic_pipe_mass_total, nozzle_mass_total,abs_sheet_mass_total,photopolymer_resin_mass_total,silicone_ring_mass_total,o36_ring_mass_total)
+         print(mass_tot)
          return(False)
 
 def tube_length(N, L, passes):
@@ -130,7 +131,7 @@ def tube_length(N, L, passes):
     if copper_length <3.5:
         return(True)
     else:
-        print("length over")
+        #print("length over")
         return(False)
 
 
@@ -160,6 +161,7 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
         
         # Update maximum value and combination if necessary
         if value > max_value:
+            #print(N_b)
             print("Replacing")
             
             max_value = value
@@ -185,49 +187,25 @@ def objective_function(L, N, Y, N_b, passes):
     mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 8, 8 )
 
     U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
-    A_pipe = N * d_i* L * np.pi
+    A_pipe = N * d_i* L * np.pi * passes
     #print(NTU(U_pipe, A_pipe, mdot1, mdot2))
 
     #check copper length
     tube_length_value = tube_length(N, L, passes)
 
     if mass_under == True and tube_length_value == True:
+      print(U_pipe) 
       return effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
     else:
        return 0
     
 
-variable_ranges = [(0.25, 0.35), (5, 13), (0.012, 0.013), (1, 10), (1, 3)]  # Example variable ranges
-step_sizes = [0.1, 1, 0.001, 1, 1]
+variable_ranges = [(0.34, 0.35), (5, 6), (0.012, 0.013), (6, 7), (1, 3)]  # Example variable ranges
+step_sizes = [0.01, 1, 0.001, 1, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
 print("Maximizing combination of variables:", max_combination)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#total_m = total_mass(13, 0.35, 4, 0.05, 9, 1, 0.0001, 10, 10)
-
-#print(total_m)
 
 
 
