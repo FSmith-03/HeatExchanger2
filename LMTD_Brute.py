@@ -5,90 +5,6 @@ from scipy.optimize import differential_evolution, brute
 import matplotlib.pyplot as plt
 import itertools
 
-def brute_force(bounds, step_i, graphing = False):
-     # Extract initial parameters
-    Nb_0 = bounds[1][0]
-    Y_0 = bounds[2][0]
-    Nb_1 = bounds[1][1]
-    Y_1 = bounds[2][1]
-
-    #Extract iteration step size
-    Y_step = (Y_1-Y_0)/step_i
-    #Extract starting values:
-    Nb = Nb_0
-    Y = Y_0
-    a = 0.2         #a=0.2 for triangular pitch and 0.34 for square pitch
-    cp = 4179
-    F = 1
-    N = 4
-    counter = 0
-    timeout = 1e10
-    output = [0, 0, 0]
-    design_params = [100, 100, 100, 100, 100]
-    x = []
-    y = []
-    x_opt = []
-    y_opt = []
-    params_opt = []
-    while N < 11:
-        while Nb < Nb_1:
-            while Y < Y_1:
-                A = N*np.pi*0.006*0.35
-                mdot2, error2 = pressure_intersection_2(N, mdot_upper=0.8)
-                v_tube = v_tube_finder(mdot2, N)
-                reynolds_tube = reynolds_tube_finder(v_tube)
-
-                # Cold stream
-                #Check for shell error from invalid geometries
-                A_sh = shell_area_finder(Y, Nb)
-                mdot1, error1 = pressure_intersection_1(N, Nb, Y, mdot_upper=0.8)
-                
-                v_shell = v_shell_finder(mdot1, A_sh)
-                v_nozzle_1 = v_nozzle_finder(mdot1)
-                d_sh = shell_chic_length_finder(A_sh)
-                reynolds_shell = reynolds_shell_finder(v_shell, d_sh)
-
-                # Thermal Analysis
-                H = H_finder(reynolds_tube, reynolds_shell)
-                #print(mdot1, mdot2, H, A, F)
-                T1out, T2out, LMTD = temperature_solvernew1(mdot1, mdot2, H, A, F, 25000, 100)
-                print(T1out, T2out, LMTD)
-                #print(mdot2)
-                #Append the LMTD only if there is no pressure issue and the LMTD is better than the previous estimate
-                if LMTD > output[2]:
-                    params = [N, Nb, Y, mdot1, mdot2]
-                    #print(params)
-                    output = [T1out, T2out, LMTD]
-                    point = [counter, LMTD]
-                    x_opt.append(counter)
-                    y_opt.append(LMTD)
-                    params_opt.append(params)
-                    counter +=1
-                #Temperature solver throws out -1000 if there is an issue with the input values.
-                check = LMTD == -1000
-                if check == False:
-                    x.append(counter)
-                    y.append(LMTD)
-                print(counter)
-                if counter == timeout:
-                    raise TimeoutError
-                Y += Y_step
-            Y = Y_0
-            Nb += 1
-        Y = Y_0
-        Nb = Nb_0
-        N += 1 
-    print("Optimal design parameters are:", params)
-    print("Optimal temperatures are:", output)
-    if graphing == True:
-        plt.scatter(x, y, s=10, color = 'cyan', label = 'LMTD Trend')
-        plt.plot(x_opt, y_opt, color = 'red', label = 'LMTD Optimal')
-        plt.xlabel('Iteration Number')
-        plt.ylabel('LMTD')
-        plt.title('Improvement in LMTD with iteration count')
-        plt.legend(fontsize = 'large')
-        plt.show()
-
 copper_tube_mass = 0.20 #kg/m
 acrylic_pipe_mass = 0.65 #kg/m
 nozzle_mass = 0.025 #kg/nozzles
@@ -182,7 +98,8 @@ def objective_function(L, N, Y, N_b, passes):
     # Thermal Analysis
     H = H_finder(reynolds_tube_value, reynolds_shell_value)
     #print(mdot1, mdot2, H, A, F)
-    T1out, T2out, LMTD = temperature_solvernew1(mdot1, mdot2, H, A, F, 25000, 100)
+    #T1out, T2out, LMTD = temperature_solvernew2(mdot1, mdot2, H, A, F, 25000, 100)
+    T1out, T2out, qdot = temperature_solvernew2(mdot1, mdot2, H, A, F, 1000)
 
 
     
@@ -198,16 +115,17 @@ def objective_function(L, N, Y, N_b, passes):
     tube_length_value = tube_length(N, L, passes)
 
     if mass_under == True and tube_length_value == True:
-      return LMTD
+      print(qdot)
+      return qdot
     else:
        return 0
     
 
-variable_ranges = [(0.15, 0.25), (2, 13), (0.012, 0.013), (1, 10), (1, 3)]  # Example variable ranges
+variable_ranges = [(0.15, 0.35), (2, 10), (0.012, 0.013), (1, 10), (1, 2)]  # Example variable ranges
 step_sizes = [0.01, 1, 0.001, 1, 1]
 
 max_value, max_combination, LMTD_List = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
-print("Maximum value:", max_value)
+print("Maximum Qdot value:", max_value)
 print("Maximizing combination of variables:", max_combination)
 
 x_List = np.arange(1, len(LMTD_List)+1, 1)
