@@ -22,7 +22,7 @@ def v_nozzle_finder(mdot2):
     v_nozzle = mdot2/(rho*np.pi*0.25*d_n**2)
     return v_nozzle
 
-def presure_loss_tube_finder(v_tube, reynolds_tube, L=0.35):
+def presure_loss_tube_finder(v_tube, reynolds_tube, L):
     rho = 990.1
     d_i = 0.006
     #L = 0.35
@@ -67,8 +67,7 @@ def pressure_loss_ends_finder(v_tube, kc, ke):
     return pressure_loss_ends
 
 
-def shell_area_finder(Y, N_b):
-    L = 0.35
+def shell_area_finder(Y, N_b, L):
     d_sh = 0.064
     d_o = 0.008
     B = L/(N_b+1)
@@ -144,8 +143,7 @@ def pressure_checker(pressure_loss, mdot, stream):
         return reference_pressure_rise, True
 
 #print(pressure_checker(0.04360, 0.45, 2))
-def pressure_intersection_2(N, mdot_upper=0.6):
-    A = N*np.pi*0.006*0.35
+def pressure_intersection_2(N,L, mdot_upper=0.6):
     mdot2 = np.arange(0.2, mdot_upper, 0.0005)
     best_estimate = 100
     #Hot stream
@@ -153,7 +151,7 @@ def pressure_intersection_2(N, mdot_upper=0.6):
         v_tube = v_tube_finder(mdot, N)
         reynolds_tube = reynolds_tube_finder(v_tube)
         v_nozzle_2 = v_nozzle_finder(mdot)
-        pressure_loss_tube = presure_loss_tube_finder(v_tube, reynolds_tube)
+        pressure_loss_tube = presure_loss_tube_finder(v_tube, reynolds_tube, L)
         sigma = sigma_finder(N)
         #print(sigma)
         kc, ke = kc_ke_finder(sigma)
@@ -180,7 +178,6 @@ def pressure_intersection_2(N, mdot_upper=0.6):
 
 
 def pressure_intersection_1(N, Nb, Y, mdot_upper=0.8):
-    A = N*np.pi*0.006*0.35
     mdot1 = np.arange(0.2, mdot_upper, 0.0005)
     best_estimate = 100
     #Hot stream
@@ -203,7 +200,6 @@ def pressure_intersection_1(N, Nb, Y, mdot_upper=0.8):
         coefficients, _, _, _ = np.linalg.lstsq(X, y_cold_data, rcond=None)
         reference_pressure_rise = np.polyval(coefficients[::-1], mdot)    
         difference = abs(reference_pressure_rise - pressure_loss_1)
-        print(difference)
         if difference < best_estimate:
             best_estimate = difference
         else:
