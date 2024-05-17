@@ -30,6 +30,7 @@ def temperature_solver1(mdot1, mdot2, H, A, F):
     T1out = 21
     counter = 0
     N = 250
+    Tlist = np.arange(T1in, T2in, )
     for n in range(N):
         T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
         LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))

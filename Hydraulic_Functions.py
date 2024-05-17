@@ -262,6 +262,31 @@ def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
             return -1000, -1000, -1000
     return -1000, -1000, -1000
 
+
+def temperature_solvernew2(mdot1, mdot2, H, A, F, N_i):
+    T1in = 20
+    T2in = 60
+    cp = 4179
+    T2out = 57
+    T1out = 21
+    best_delta_q12 = 1e6
+    best_delta_q23 = 1e6
+    step = 40/N_i
+    T_List = np.arange(T1in, T2in, step)
+    for T2out in T_List:
+        T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
+        LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
+        qdot1 = cp*mdot1*(T1out-T1in)
+        qdot2 = cp*mdot2*(T2in-T2out)
+        qdot3 = H*A*F*LMTD
+        delta_q12 = abs(qdot1 - qdot2)
+        delta_q23 = abs(qdot2 - qdot3)
+        if delta_q23 < best_delta_q23:
+            best_delta_q23 = delta_q23
+        else:
+            return T1out, T2out, qdot3
+
+
 def efficiency_finder(LMTD, H, A, F, mdot2):
     cp = 4179
     Qdot = LMTD*H*A*F
