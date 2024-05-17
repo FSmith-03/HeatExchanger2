@@ -216,20 +216,34 @@ def pressure_intersection_1(N, Nb, Y, L, mdot_upper=0.8):
             return "No root found within range, increase upper limit"
 
 
-def H_finder(reynolds_tube, reynolds_shell):
+def H_finder(reynolds_tube, reynolds_shell, L, N_b, Y, mdot1):
     Pr = 4.31
     c = 0.15    #change for triangular/square pitch
     kw = 0.632
     k_tube = 386
     d_i = 0.006
     d_o = 0.008
+    D_s = 0.064
+    cp = 4179
+    #Baffle Spacing
+    LBC = L/(N_b+1)
+    Sm = LBC*((D_s/Y)*(Y-d_o))
+    mdot = mdot1/Sm
+    a1 = 0.321
+    a2 = -0.388
+    a3 = 1.45
+    a4 = 0.519
+    a = (a3)/(1+0.14*reynolds_shell**a4)
+    j1 = a1*(1.33/(Y/d_o)**a)*reynolds_shell**a2
+    alpha1 = j1*cp*mdot*4.31**(-2/3)
+
     Nu_i = 0.023*(reynolds_tube)**0.8*4.31**0.3     #care for change in mass flow rate changing the reynolds number
     Nu_o = c*reynolds_shell**0.6*Pr**0.3
     h_i = (Nu_i*kw)/d_i
     h_o = (Nu_o*kw)/d_o
     Hinv = (1/(h_i))+((d_i*np.log(d_o/d_i))/(2*k_tube))+(1/(h_o))*(d_i/d_o)
     H = 1/Hinv
-    return H
+    return H*alpha1
 
 def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
     T1in = 20
