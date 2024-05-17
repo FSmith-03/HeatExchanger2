@@ -165,14 +165,14 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
 def objective_function(L, N, Y, N_b, passes):
     A = N*np.pi*0.006*L
     F = 1
-    mdot2, error2 = pressure_intersection_2(N, mdot_upper=0.8)
+    mdot2, error2 = pressure_intersection_2(N, L, mdot_upper=0.8)
     v_tube = v_tube_finder(mdot2, N)
     reynolds_tube_value = reynolds_tube_finder(v_tube)
 
     # Cold stream
     #Check for shell error from invalid geometries
-    A_sh = shell_area_finder(Y, N_b)
-    mdot1, error1 = pressure_intersection_1(N, N_b, Y, mdot_upper=0.8)
+    A_sh = shell_area_finder(Y, N_b, L)
+    mdot1, error1 = pressure_intersection_1(N, N_b, Y, L, mdot_upper=0.8)
     
     v_shell = v_shell_finder(mdot1, A_sh)
     v_nozzle_1 = v_nozzle_finder(mdot1)
