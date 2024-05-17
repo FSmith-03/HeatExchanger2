@@ -112,7 +112,7 @@ def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_r
       copper_tube_mass_total = copper_tube_mass * N * L * passes
       acrylic_pipe_mass_total = acrylic_pipe_mass * L
       nozzle_mass_total = nozzle_mass * nozzles
-      abs_sheet_mass_total = (abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness) + (passes-1)*L*(d_sh)*abs_sheet_thickness #check for splitters
+      abs_sheet_mass_total = (0.75 * abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness) + (passes-1)*L*(d_sh)*abs_sheet_thickness #check for splitters
       photopolymer_resin_mass_total = photopolymer_resin_mass * end_plate_vol
       silicone_ring_mass_total = silicone_ring_mass * sil_rings
       o36_ring_mass_total = o36_ring_mass * o36_rings
@@ -135,7 +135,7 @@ def tube_length(N, L, passes):
         return(False)
 
 
-      
+
       
 
 
@@ -171,6 +171,7 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
 
 def objective_function(L, N, Y, N_b, passes):
     mdot1, error1 = pressure_intersection_1(N, N_b, Y, L)
+    print(mdot1)
     mdot2, error2 = pressure_intersection_2(N, L)
     shell_area_value = shell_area_finder_NTU(Y, N_b, L)
     v_shell_value = hf.v_shell_finder(mdot1, shell_area_value)
@@ -184,7 +185,7 @@ def objective_function(L, N, Y, N_b, passes):
     
 
     #mass check
-    mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 8, 8 )
+    mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 4, 4)
 
     U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
     A_pipe = N * d_i* L * np.pi * passes
@@ -194,22 +195,15 @@ def objective_function(L, N, Y, N_b, passes):
     tube_length_value = tube_length(N, L, passes)
 
     if mass_under == True and tube_length_value == True:
-      print(U_pipe) 
+      print(N_b, U_pipe)
       return effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
     else:
        return 0
     
 
-variable_ranges = [(0.25, 0.35), (5, 6), (0.012, 0.013), (1, 7), (1, 3)]  # Example variable ranges
-step_sizes = [0.001, 1, 0.001, 1, 1]
+variable_ranges = [(0.25, 0.35), (1, 10), (0.012, 0.013), (1, 5), (2, 3)]  # Example variable ranges
+step_sizes = [0.01, 1, 0.001, 1, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
 print("Maximizing combination of variables:", max_combination)
-
-
-
-
-
-
-

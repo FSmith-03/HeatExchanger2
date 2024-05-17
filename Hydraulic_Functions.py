@@ -103,7 +103,13 @@ def reynolds_shell_finder(v_shell, shell_chic_length):
     reynolds_shell = (rho*v_shell*shell_chic_length)/mu
     return reynolds_shell
 
-def pressure_loss_shell_finder(reynolds_shell, N, v_shell, a):
+def pressure_loss_shell_finder(reynolds_shell, N, v_shell, a, baffles):
+    rho = 990.1
+    fs = 1.44 * reynolds_shell ** (-0.15)
+    pressure_loss_shell = rho * (v_shell**2 /2) * (baffles + 1) * fs + 4*a*(reynolds_shell**(-0.15))*N*rho*v_shell**2
+    return pressure_loss_shell
+
+def pressure_loss_shell_finder_old(reynolds_shell, N, v_shell, a):
     rho = 990.1
     pressure_loss_shell = 4*a*(reynolds_shell**(-0.15))*N*rho*v_shell**2
     return pressure_loss_shell
@@ -190,7 +196,7 @@ def pressure_intersection_1(N, Nb, Y, L, mdot_upper=0.8):
         v_nozzle_1 = v_nozzle_finder(mdot)
         d_sh = shell_chic_length_finder(A_sh)
         reynolds_shell = reynolds_shell_finder(v_shell, d_sh)
-        pressure_loss_shell = pressure_loss_shell_finder(reynolds_shell, N, v_shell, 0.2)
+        pressure_loss_shell = pressure_loss_shell_finder(reynolds_shell, N, v_shell, 0.2, Nb)
         pressure_loss_nozzle_1 = pressure_loss_nozzle_finder(v_nozzle_1)
         pressure_loss_1 = (pressure_loss_shell + pressure_loss_nozzle_1)/1e5
         degree = 5
