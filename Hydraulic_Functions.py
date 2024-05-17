@@ -22,7 +22,7 @@ def v_nozzle_finder(mdot2):
     v_nozzle = mdot2/(rho*np.pi*0.25*d_n**2)
     return v_nozzle
 
-def presure_loss_tube_finder(v_tube, reynolds_tube, L):
+def presure_loss_tube_finder(v_tube, reynolds_tube, L=0.35):
     rho = 990.1
     d_i = 0.006
     #L = 0.35
@@ -144,6 +144,73 @@ def pressure_checker(pressure_loss, mdot, stream):
         return reference_pressure_rise, True
 
 #print(pressure_checker(0.04360, 0.45, 2))
+def pressure_intersection_2(N, mdot_upper=0.6):
+    A = N*np.pi*0.006*0.35
+    mdot2 = np.arange(0.2, mdot_upper, 0.0005)
+    best_estimate = 100
+    #Hot stream
+    for mdot in mdot2:
+        v_tube = v_tube_finder(mdot, N)
+        reynolds_tube = reynolds_tube_finder(v_tube)
+        v_nozzle_2 = v_nozzle_finder(mdot)
+        pressure_loss_tube = presure_loss_tube_finder(v_tube, reynolds_tube)
+        sigma = sigma_finder(N)
+        #print(sigma)
+        kc, ke = kc_ke_finder(sigma)
+        pressure_loss_ends = pressure_loss_ends_finder(v_tube, kc, ke)
+        pressure_loss_nozzle_2 = pressure_loss_nozzle_finder(mdot)
+
+        pressure_loss_2 = (pressure_loss_ends + pressure_loss_nozzle_2 + pressure_loss_tube)/1e5
+        degree = 5
+        x_hot_data = np.array([0.4826, 0.4340, 0.3924, 0.3507, 0.3021, 0.2535, 0.1979, 0.1493, 0.1111, 0.0694])
+        y_hot_data = np.array([0.0944, 0.1662, 0.2297, 0.2820, 0.3294, 0.3856, 0.4447, 0.5006, 0.5311, 0.5615])
+
+        # Create a Vandermonde matrix of the independent variable x
+        X = np.vander(x_hot_data, degree + 1, increasing=True)
+        # Perform least squares polynomial regression
+        coefficients, _, _, _ = np.linalg.lstsq(X, y_hot_data, rcond=None)
+        reference_pressure_rise = np.polyval(coefficients[::-1], mdot)
+        difference = abs(reference_pressure_rise - pressure_loss_2)
+        if difference < best_estimate:
+            best_estimate = difference
+        else:
+            return mdot, best_estimate
+        if mdot == mdot_upper:
+            return "No root found within range, increase upper limit"
+
+
+def pressure_intersection_1(N, Nb, Y, mdot_upper=0.8):
+    A = N*np.pi*0.006*0.35
+    mdot1 = np.arange(0.2, mdot_upper, 0.0005)
+    best_estimate = 100
+    #Hot stream
+    for mdot in mdot1:
+    #Cold stream
+        A_sh = shell_area_finder(Y, Nb)
+        v_shell = v_shell_finder(mdot, A_sh)
+        v_nozzle_1 = v_nozzle_finder(mdot)
+        d_sh = shell_chic_length_finder(A_sh)
+        reynolds_shell = reynolds_shell_finder(v_shell, d_sh)
+        pressure_loss_shell = pressure_loss_shell_finder(reynolds_shell, N, v_shell, 0.2)
+        pressure_loss_nozzle_1 = pressure_loss_nozzle_finder(v_nozzle_1)
+        pressure_loss_1 = (pressure_loss_shell + pressure_loss_nozzle_1)/1e5
+        degree = 5
+        x_cold_data = np.array([0.6333, 0.6083, 0.5750, 0.5083, 0.4250, 0.3583, 0.3083, 0.2417, 0.1917, 0.1583])
+        y_cold_data = np.array([0.1024, 0.1444, 0.1870, 0.2717, 0.3568, 0.4203, 0.4626, 0.5152, 0.5597, 0.5776])
+        # Create a Vandermonde matrix of the independent variable x
+        X = np.vander(x_cold_data, degree + 1, increasing=True)
+        # Perform least squares polynomial regression
+        coefficients, _, _, _ = np.linalg.lstsq(X, y_cold_data, rcond=None)
+        reference_pressure_rise = np.polyval(coefficients[::-1], mdot)    
+        difference = abs(reference_pressure_rise - pressure_loss_1)
+        print(difference)
+        if difference < best_estimate:
+            best_estimate = difference
+        else:
+            return mdot, best_estimate
+        if mdot == mdot_upper:
+            return "No root found within range, increase upper limit"
+
 
 def H_finder(reynolds_tube, reynolds_shell):
     Pr = 4.31

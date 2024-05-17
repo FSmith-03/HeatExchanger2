@@ -1,5 +1,5 @@
 from Hydraulic_Functions import *
-
+from temperature_solvers_old import *
 
 #Check functions against calculated values for different parameters
 N, Nb, Y, mdot1, mdot2 = [10, 9, 0.014, 0.5, 0.5]
