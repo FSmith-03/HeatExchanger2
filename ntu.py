@@ -109,7 +109,7 @@ silicone_ring_mass = 0.8/1000 #kg/ring
 o36_ring_mass = 5.3/1000 #kg/ring
 
 def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_rings, o36_rings):
-      copper_tube_mass_total = copper_tube_mass * N * L 
+      copper_tube_mass_total = copper_tube_mass * N * L * passes
       acrylic_pipe_mass_total = acrylic_pipe_mass #tube vs shell to check
       nozzle_mass_total = nozzle_mass * nozzles
       abs_sheet_mass_total = abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness #check for splitters
@@ -118,21 +118,28 @@ def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_r
       o36_ring_mass_total = o36_ring_mass * o36_rings
       mass_tot = copper_tube_mass_total + acrylic_pipe_mass_total + nozzle_mass_total + abs_sheet_mass_total + photopolymer_resin_mass_total + silicone_ring_mass_total + o36_ring_mass_total 
       if mass_tot <1.2:
-         
          return(True)
       else:
          print("mass over")
          #print(mass_tot)
          #print(copper_tube_mass_total, acrylic_pipe_mass_total, nozzle_mass_total,abs_sheet_mass_total,photopolymer_resin_mass_total,silicone_ring_mass_total,o36_ring_mass_total)
          return(False)
-      
+
+def tube_length(N, L, passes):
+    copper_length = N*L*passes
+    if copper_length <3.5:
+        return(True)
+    else:
+        print("length over")
+        return(False)
+
 #checking pressure losses
 
 def pressure_checker_NTU(pressure_loss, mdot, stream):
-    x_cold_data = np.array([0.7083, 0.6417, 0.5750, 0.5083, 0.4250, 0.3583, 0.3083, 0.2417, 0.1917, 0.1583])
-    y_cold_data = np.array([0.1310, 0.2017, 0.2750, 0.3417, 0.4038, 0.4503, 0.4856, 0.5352, 0.5717, 0.5876])
-    x_hot_data = np.array([0.4722, 0.4340, 0.3924, 0.3507, 0.3021, 0.2535, 0.1979, 0.1493, 0.1111, 0.0694])
-    y_hot_data = np.array([0.0538, 0.1192, 0.1727, 0.2270, 0.2814, 0.3366, 0.3907, 0.4456, 0.4791, 0.5115])
+    x_cold_data = np.array([0.6333, 0.6083, 0.5750, 0.5083, 0.4250, 0.3583, 0.3083, 0.2417, 0.1917, 0.1583])
+    y_cold_data = np.array([0.1024, 0.1444, 0.1870, 0.2717, 0.3568, 0.4203, 0.4626, 0.5152, 0.5597, 0.5776])
+    x_hot_data = np.array([0.4826, 0.4340, 0.3924, 0.3507, 0.3021, 0.2535, 0.1979, 0.1493, 0.1111, 0.0694])
+    y_hot_data = np.array([0.0944, 0.1662, 0.2297, 0.2820, 0.3294, 0.3856, 0.4447, 0.5006, 0.5311, 0.5615])
     degree = 5
     if stream == 1:
         # Create a Vandermonde matrix of the independent variable x
@@ -226,14 +233,18 @@ def objective_function(L, N, Y, N_b, mdot1, mdot2, passes):
     U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
     A_pipe = N * d_i* L * np.pi
     #print(NTU(U_pipe, A_pipe, mdot1, mdot2))
-    if mass_under == True and pressure_under_cold == True and pressure_under_hot == True:
+
+    #check copper length
+    tube_length_value = tube_length(N, L, passes)
+
+    if mass_under == True and pressure_under_cold == True and pressure_under_hot == True and tube_length_value == True:
       return effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
     else:
        return 0
     
 
-variable_ranges = [(0.25, 0.35), (4, 10), (0.1, 0.2), (1, 5), (0.1, 0.7), (0.01, 0.51), (1, 3)]  # Example variable ranges
-step_sizes = [0.1, 1, 0.1, 1, 0.1, 0.1, 1]
+variable_ranges = [(0.35, 0.36), (6, 7), (0.014, 0.015), (6, 7), (0.6, 0.7), (0.4, 0.5), (1, 2)]  # Example variable ranges
+step_sizes = [0.1, 1, 0.001, 1, 0.01, 0.01, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
