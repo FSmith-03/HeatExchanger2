@@ -1,6 +1,7 @@
 import numpy as np
 from Hydraulic_Functions import *
 from scipy.optimize import differential_evolution
+from temperature_solvers_old import *
 
 # Define the function to minimize (negative LMTD)
 def objective_function(params):
