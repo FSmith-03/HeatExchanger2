@@ -187,7 +187,7 @@ def objective_function(L, N, Y, N_b, passes):
     #mass check
     mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 4, 4)
 
-    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value) * (1+0.0015*N_b)
+    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value) #(1+0.0015*N_b)
     A_pipe = N * d_i* L * np.pi * passes
     #print(NTU(U_pipe, A_pipe, mdot1, mdot2))
 
