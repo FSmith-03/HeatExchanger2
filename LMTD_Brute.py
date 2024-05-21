@@ -96,7 +96,7 @@ def objective_function(L, N, Y, N_b, passes):
     reynolds_shell_value = reynolds_shell_finder(v_shell, d_sh)
 
     # Thermal Analysis
-    H = H_finder(reynolds_tube_value, reynolds_shell_value)
+    H = H_finder(reynolds_tube_value, reynolds_shell_value, L, N_b, Y, mdot1)
     #print(mdot1, mdot2, H, A, F)
     #T1out, T2out, LMTD = temperature_solvernew2(mdot1, mdot2, H, A, F, 25000, 100)
     T1out, T2out, qdot = temperature_solvernew2(mdot1, mdot2, H, A, F, 1000)
@@ -106,10 +106,6 @@ def objective_function(L, N, Y, N_b, passes):
 
     #mass check
     mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 8, 8 )
-
-    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value)
-    A_pipe = N * d_i* L * np.pi
-    #print(NTU(U_pipe, A_pipe, mdot1, mdot2))
 
     #check copper length
     tube_length_value = tube_length(N, L, passes)

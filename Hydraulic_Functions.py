@@ -228,6 +228,7 @@ def H_finder(reynolds_tube, reynolds_shell, L, N_b, Y, mdot1):
     #Baffle Spacing
     LBC = L/(N_b+1)
     Sm = LBC*((D_s/Y)*(Y-d_o))
+    print(Sm)
     mdot = mdot1/Sm
     a1 = 0.321
     a2 = -0.388
@@ -236,15 +237,14 @@ def H_finder(reynolds_tube, reynolds_shell, L, N_b, Y, mdot1):
     a = (a3)/(1+0.14*reynolds_shell**a4)
     j1 = a1*(1.33/(Y/d_o)**a)*reynolds_shell**a2
     alpha1 = j1*cp*mdot*4.31**(-2/3)
-
+    #print(j1, mdot)
     Nu_i = 0.023*(reynolds_tube)**0.8*4.31**0.3     #care for change in mass flow rate changing the reynolds number
     Nu_o = c*reynolds_shell**0.6*Pr**0.3
     h_i = (Nu_i*kw)/d_i
-    h_o = alpha1*(Nu_o*kw)/d_o
-    #h_o = (Nu_o*kw)/d_o
+    h_o = (Nu_o*kw)/d_o
     Hinv = (1/(h_i))+((d_i*np.log(d_o/d_i))/(2*k_tube))+(1/(h_o))*(d_i/d_o)
     H = 1/Hinv
-    return H
+    return H*alpha1
 
 def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
     T1in = 20
@@ -278,29 +278,48 @@ def temperature_solvernew1(mdot1, mdot2, H, A, F, N_i, error):
     return -1000, -1000, -1000
 
 
-def temperature_solvernew2(mdot1, mdot2, H, A, F, N_i):
+def temperature_solvernew2(mdot1, mdot2, H, A, F, N_i, passes, shells):
     T1in = 20
     T2in = 60
     cp = 4179
     T2out = 57
     T1out = 21
-    best_delta_q12 = 1e6
     best_delta_q23 = 1e6
     step = 40/N_i
     T_List = np.arange(T1in, T2in, step)
     for T2out in T_List:
         T1out = T1in + (mdot2/mdot1)*(T2in - T2out)
+        #Function for finding the correction factor for the number of shells/passes.
+        R = (T2in - T2out)/(T1out - T1in)
+        P = (T1out - T1in)/(T2in - T1in)
+        if passes == 2*shells:
+            Pn = (1-((1-P*R)/(1-P))**shells)/(R-((1-P*R)/(1-P))**shells)
+            W = (1-Pn*R)/(1-Pn)
+            F = 2**0.5 * (W)/np.log((1/W + 1/2**0.5)/(1/W - 1/2**0.5))
+        else:
+            F = 1 
         LMTD = ((T2in - T1out)-(T2out-T1in))/(np.log((T2in-T1out)/(T2out-T1in)))
         qdot1 = cp*mdot1*(T1out-T1in)
         qdot2 = cp*mdot2*(T2in-T2out)
         qdot3 = H*A*F*LMTD
-        delta_q12 = abs(qdot1 - qdot2)
         delta_q23 = abs(qdot2 - qdot3)
         if delta_q23 < best_delta_q23:
             best_delta_q23 = delta_q23
         else:
             return T1out, T2out, qdot3
 
+"""
+    R = (Th_in-Th)/(Tc-Tc_in)
+    P = (Tc-Tc_in)/(Th_in-Tc_in)
+    
+    if No_pass == 2*No_sh:
+        Pn = (1-((1-P*R)/(1-P))**No_sh)/(R-((1-P*R)/(1-P))**No_sh)
+        W = (1-Pn*R)/(1-Pn)
+        F = 2**0.5 * (W)/np.log((1/W + 1/2**0.5)/(1/W - 1/2**0.5))
+        #print(F)
+    else:
+        F=1
+        """
 
 def efficiency_finder(LMTD, H, A, F, mdot2):
     cp = 4179
