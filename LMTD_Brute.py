@@ -60,6 +60,7 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
     print("Variable Ranges:", variable_ranges)
     print("Step Sizes:", step_sizes)
     LMTD_List = []
+    combination_list = []
     # Generate all possible combinations of variable values
     combinations = itertools.product(*[frange(min_val, max_val, step) for (min_val, max_val), step in zip(variable_ranges, step_sizes)])
     
@@ -72,11 +73,11 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
         LMTD_List.append(value)
         if value > max_value:
             print("Replacing")
-            
+            combination_list.append([value ,combination])
             max_value = value
             max_combination = combination
             
-    return max_value, max_combination, LMTD_List
+    return max_value, max_combination, LMTD_List, combination_list
 
 def objective_function(L, N, Y, N_b, passes):
     A = N*np.pi*0.006*L
@@ -96,10 +97,10 @@ def objective_function(L, N, Y, N_b, passes):
     reynolds_shell_value = reynolds_shell_finder(v_shell, d_sh)
 
     # Thermal Analysis
-    H = H_finder(reynolds_tube_value, reynolds_shell_value, L, N_b, Y, mdot1)
+    H = H_finder(reynolds_tube_value, reynolds_shell_value, L, N_b, Y, mdot1, passes, N)
     #print(mdot1, mdot2, H, A, F)
     #T1out, T2out, LMTD = temperature_solvernew2(mdot1, mdot2, H, A, F, 25000, 100)
-    T1out, T2out, qdot = temperature_solvernew2(mdot1, mdot2, H, A, F, 1000)
+    T1out, T2out, qdot = temperature_solvernew2(mdot1, mdot2, H, A, F, 1000, passes)
 
 
     
@@ -111,19 +112,18 @@ def objective_function(L, N, Y, N_b, passes):
     tube_length_value = tube_length(N, L, passes)
 
     if mass_under == True and tube_length_value == True:
-      print(qdot)
       return qdot
     else:
        return 0
     
 
-variable_ranges = [(0.15, 0.35), (2, 10), (0.012, 0.013), (1, 10), (1, 2)]  # Example variable ranges
+variable_ranges = [(0.21, 0.35), (4, 8), (0.012, 0.016), (3, 7), (4, 5)]  # Example variable ranges
 step_sizes = [0.01, 1, 0.001, 1, 1]
 
-max_value, max_combination, LMTD_List = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
+max_value, max_combination, LMTD_List, combination_list = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum Qdot value:", max_value)
 print("Maximizing combination of variables:", max_combination)
-
+print("Next best sets of combinations:", combination_list[-5:])
 x_List = np.arange(1, len(LMTD_List)+1, 1)
 
 plt.scatter(x_List, LMTD_List, s=5, color = 'cyan', label = 'LMTD Trend')

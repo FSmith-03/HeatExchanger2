@@ -202,8 +202,8 @@ def objective_function(L, N, Y, N_b, passes):
     
 #length plus nozzle + gap each side = 0.07
 #gap for mixing = 0.02
-variable_ranges = [(0.20, 0.26), (4, 7), (0.012, 0.013), (1, 10), (2, 3)]  # Example variable ranges
-step_sizes = [0.01, 1, 0.001, 1, 1]
+variable_ranges = [(0.236, 0.26), (14,15), (0.014, 0.0145), (12, 13), (1,2)]  # Example variable ranges
+step_sizes = [1, 1, 0.01, 1, 1]
 
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
