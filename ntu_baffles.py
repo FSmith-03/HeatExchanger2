@@ -47,7 +47,7 @@ def effect_NTU_parallelflow(m1, m2, U, A): #for constant cp
     #effectiveness = 0.5*(1-np.exp(-NTU_value)) #pure parallel rc=1
     return (effectiveness)
 
-def effect_NTU_1_shell_2_pass (m1, m2, U, A): #effectivness of each shell pass
+def effect_NTU_1_shell_2_pass (m1, m2, U, A): #effectiveness of each shell pass
   NTU_value = NTU(U, A, m1, m2)
   RC_value = RC(m1, m2)
   Gamma = NTU_value * np.sqrt(1+RC_value**2)
@@ -109,8 +109,8 @@ silicone_ring_mass = 0.8/1000 #kg/ring
 o36_ring_mass = 5.3/1000 #kg/ring
 
 def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_rings, o36_rings):
-      copper_tube_mass_total = copper_tube_mass * N * L * passes
-      acrylic_pipe_mass_total = acrylic_pipe_mass * L
+      copper_tube_mass_total = copper_tube_mass * N * L * passes *2
+      acrylic_pipe_mass_total = acrylic_pipe_mass * (L+0.09)
       nozzle_mass_total = nozzle_mass * nozzles
       abs_sheet_mass_total = (0.75 * abs_sheet_mass * baffles * baffle_area * abs_sheet_thickness) + (passes-1)*L*(d_sh)*abs_sheet_thickness #check for splitters
       photopolymer_resin_mass_total = photopolymer_resin_mass * end_plate_vol
@@ -118,16 +118,17 @@ def total_mass(N, L, nozzles, baffles, baffle_area, passes, end_plate_vol, sil_r
       o36_ring_mass_total = o36_ring_mass * o36_rings
       mass_tot = copper_tube_mass_total + acrylic_pipe_mass_total + nozzle_mass_total + abs_sheet_mass_total + photopolymer_resin_mass_total + silicone_ring_mass_total + o36_ring_mass_total 
       if mass_tot <1.2:
+         print(mass_tot)
          return(True)
       else:
          #print("mass over")
          #print(mass_tot)
          #print(copper_tube_mass_total, acrylic_pipe_mass_total, nozzle_mass_total,abs_sheet_mass_total,photopolymer_resin_mass_total,silicone_ring_mass_total,o36_ring_mass_total)
-         print(mass_tot)
+         #print(mass_tot)
          return(False)
 
 def tube_length(N, L, passes):
-    copper_length = N*L*passes
+    copper_length = N*L*passes*2
     if copper_length <3.5:
         return(True)
     else:
@@ -171,7 +172,7 @@ def brute_force_maximizer(objective_function, variable_ranges, step_sizes):
 
 def objective_function(L, N, Y, N_b, passes):
     mdot1, error1 = pressure_intersection_1(N, N_b, Y, L)
-    print(mdot1)
+    #print(mdot1)
     mdot2, error2 = pressure_intersection_2(N, L)
     shell_area_value = shell_area_finder_NTU(Y, N_b, L)
     v_shell_value = hf.v_shell_finder(mdot1, shell_area_value)
@@ -187,7 +188,7 @@ def objective_function(L, N, Y, N_b, passes):
     #mass check
     mass_under = total_mass(N, L, 4, N_b, np.pi * d_sh /4, passes, np.pi * d_sh /4 *1.5/1000, 4, 4)
 
-    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value) #(1+0.0015*N_b)
+    U_pipe = hf.H_finder(reynolds_tube_value, reynolds_shell_value, L, N_b, Y, mdot1) #(1+0.0015*N_b)
     A_pipe = N * d_i* L * np.pi * passes
     #print(NTU(U_pipe, A_pipe, mdot1, mdot2))
 
@@ -195,8 +196,12 @@ def objective_function(L, N, Y, N_b, passes):
     tube_length_value = tube_length(N, L, passes)
 
     if mass_under == True and tube_length_value == True:
-      print(N_b, U_pipe)
-      return effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
+      print(mdot1, mdot2, U_pipe, A_pipe)
+      effectivness_NTU = effect_NTU_shellandpass(mdot1, mdot2, U_pipe, A_pipe, passes)
+      Qdotmax = min(mdot2, mdot1)*cp*(T2in-T1in)
+      #T1out_NTU = effectivness_NTU*Qdotmax/(mdot1*cp) + T1in
+      #T2out_NTU = T2in - effectivness_NTU*Qdotmax/(mdot2*cp)
+      return Qdotmax*effectivness_NTU
     else:
        return 0
     
@@ -208,3 +213,12 @@ step_sizes = [1, 1, 0.01, 1, 1]
 max_value, max_combination = brute_force_maximizer(objective_function, variable_ranges, step_sizes)
 print("Maximum value:", max_value)
 print("Maximizing combination of variables:", max_combination)
+
+"""mdot2_check = 0.382
+Qdotmax = mdot2_check*cp*(T2in-T1in)
+T1out_NTU_counter = max_value*Qdotmax/(0.6685*cp) + T1in
+T2out_NTU_counter = T2in - max_value*Qdotmax/(mdot2_check*cp)
+
+print(max_value*Qdotmax)
+print(T2out_NTU_counter)
+print(T1out_NTU_counter)"""
